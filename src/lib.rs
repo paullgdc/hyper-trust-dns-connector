@@ -1,3 +1,7 @@
+extern crate futures;
+extern crate hyper;
+extern crate trust_dns_resolver;
+
 use futures::{Async, Future, Poll};
 use hyper::client::connect::dns::{Name, Resolve};
 use hyper::client::HttpConnector;
