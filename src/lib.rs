@@ -26,6 +26,7 @@ impl Future for HyperLookupFuture {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct AsyncHyperResolver(AsyncResolver);
 
 impl AsyncHyperResolver {
