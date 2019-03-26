@@ -8,3 +8,7 @@ edition = "2018"
 futures = "0.1"
 trust-dns-resolver = "0.10"
 hyper = "0.12"
+
+[dev-dependencies]
+tokio = "0.1.18"
+

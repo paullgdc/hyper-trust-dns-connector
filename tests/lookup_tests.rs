@@ -1,1 +1,0 @@
-extern crate hyper_trust_dns_connector;
