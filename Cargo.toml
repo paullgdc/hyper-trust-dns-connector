@@ -1,0 +1,10 @@
+[package]
+name = "hyper-trust-dns-connector"
+version = "0.1.0"
+authors = ["Paul Le Grand Des Cloizeaux <paul.legranddec@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+futures = "0.1"
+trust-dns-resolver = "0.10"
+hyper = "0.12"
