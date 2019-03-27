@@ -10,6 +10,8 @@ use std::net::IpAddr;
 use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
 use trust_dns_resolver::{AsyncResolver, BackgroundLookupIp};
 
+/// Wrapper future type around trust-dns-resolver's 
+/// [`BackgroundLookupIp`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/type.BackgroundLookupIp.html)
 pub struct HyperLookupFuture(BackgroundLookupIp);
 
 impl Future for HyperLookupFuture {
@@ -25,11 +27,14 @@ impl Future for HyperLookupFuture {
         })
     }
 }
-
+/// Wrapper type around trust-dns-resolver's 
+/// [`AsyncResolver`](../../10.3/trust_dns_resolver/struct.AsyncResolver.html)
 #[derive(Debug, Clone)]
 pub struct AsyncHyperResolver(AsyncResolver);
 
 impl AsyncHyperResolver {
+    /// constructs a new resolver, arguments are passed to
+    /// https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html#method.new 
     pub fn new(
         config: ResolverConfig,
         options: ResolverOpts,
