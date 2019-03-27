@@ -1,8 +1,14 @@
 [package]
 name = "hyper-trust-dns-connector"
 version = "0.1.0"
-authors = ["Paul Le Grand Des Cloizeaux <paul.legranddec@gmail.com>"]
+authors = ["Paul Le Grand Des Cloizeaux <@paullgdc>"]
 edition = "2018"
+description = "A compatibility crate to use trust-dns-resolver asynchronously with hyper client, instead the default dns threadpool"
+repository = "https://github.com/paullgdc/hyper-trust-dns-connector"
+readme = "README.md"
+license = "MIT"
+keywords = ["resolver", "hyper", "trust-dns", "hyper::Client", "async"]
+categories = ["asynchronous", "web-programming::http-client", "network-programming"]
 
 [dependencies]
 futures = "0.1"
