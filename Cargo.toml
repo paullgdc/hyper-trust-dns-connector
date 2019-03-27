@@ -1,6 +1,6 @@
 [package]
 name = "hyper-trust-dns-connector"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Paul Le Grand Des Cloizeaux <@paullgdc>"]
 edition = "2018"
 description = "A compatibility crate to use trust-dns-resolver asynchronously with hyper client, instead the default dns threadpool"
