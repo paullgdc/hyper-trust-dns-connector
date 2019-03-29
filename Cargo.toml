@@ -7,7 +7,7 @@ description = "A compatibility crate to use trust-dns-resolver asynchronously wi
 repository = "https://github.com/paullgdc/hyper-trust-dns-connector"
 readme = "README.md"
 license = "MIT"
-keywords = ["resolver", "hyper", "trust-dns", "hyper::Client", "async"]
+keywords = ["resolver", "hyper", "trust-dns", "webclient", "async"]
 categories = ["asynchronous", "web-programming::http-client", "network-programming"]
 
 [dependencies]
