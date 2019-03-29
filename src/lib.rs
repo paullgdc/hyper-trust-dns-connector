@@ -1,3 +1,33 @@
+#![doc(html_root_url = "https://docs.rs/hyper/0.12.25")]
+//! # hyper_trust_dns_connector
+//! 
+//! A compatibility crate to use [trust-dns-resolver](https://docs.rs/trust-dns-resolver) 
+//! asynchronously with [hyper](https://docs.rs/hyper) client,
+//! instead the default dns threadpool.
+//! 
+//! ```
+//! extern crate hyper_trust_dns_connector;
+//! extern crate hyper;
+//! extern crate tokio;
+//! 
+//! use hyper_trust_dns_connector::new_async_http_connector;
+//! use hyper::{Client, Body};
+//! use tokio::prelude::Future;
+//! use tokio::runtime::Runtime;
+//! 
+//! let mut rt = Runtime::new().expect("couldn't create runtime");
+//! let (async_http, background) = new_async_http_connector()
+//!     .expect("couldn't create connector");
+//! let client = Client::builder()
+//!     .executor(rt.executor())
+//!     .build::<_, Body>(async_http);
+//! rt.spawn(background);
+//! let status_code = rt
+//!     .block_on(client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
+//!     .map(|res| res.status()))
+//!     .expect("error during the request");
+//! println!("status is {:?}", status_code);
+//! ```
 extern crate futures;
 extern crate hyper;
 extern crate trust_dns_resolver;
@@ -28,13 +58,17 @@ impl Future for HyperLookupFuture {
     }
 }
 /// Wrapper type around trust-dns-resolver's 
-/// [`AsyncResolver`](../../10.3/trust_dns_resolver/struct.AsyncResolver.html)
+/// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html)
+/// 
+/// The resolver runs a bakground Task wich manages dns requests. When a new resolver is created, 
+/// the background task is also created, it needs to be spawned on top of an executor before using the client,
+/// or dns requests will block.
 #[derive(Debug, Clone)]
 pub struct AsyncHyperResolver(AsyncResolver);
 
 impl AsyncHyperResolver {
-    /// constructs a new resolver, arguments are passed to
-    /// https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html#method.new 
+    /// constructs a new resolver, arguments are passed to the corresponding method of
+    /// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html#method.new)
     pub fn new(
         config: ResolverConfig,
         options: ResolverOpts,
@@ -42,6 +76,8 @@ impl AsyncHyperResolver {
         let (resolver, background) = AsyncResolver::new(config, options);
         (Self(resolver), background)
     }
+    /// constructs a new resolver from default configuration, uses the corresponding method of
+    /// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html#method.new) 
     pub fn new_from_system_conf() -> Result<(Self, impl Future<Item = (), Error = ()>), io::Error> {
         let (resolver, background) = AsyncResolver::from_system_conf()?;
         Ok((Self(resolver), background))
@@ -56,6 +92,23 @@ impl Resolve for AsyncHyperResolver {
     }
 }
 
+/// A helper function to create an http connector from default configuration
+/// 
+/// ```
+/// use tokio::runtime::Runtime;
+/// use hyper_trust_dns_connector::new_async_http_connector;
+/// use hyper::{Client, Body};
+/// 
+/// let mut rt = Runtime::new().expect("couldn't create runtime");
+/// 
+/// let (async_http, background) = new_async_http_connector()
+///     .expect("couldn't create connector");
+/// let client = Client::builder()
+///     .executor(rt.executor())
+///     .build::<_, Body>(async_http);
+/// 
+/// rt.spawn(background);
+/// ```
 pub fn new_async_http_connector() -> Result<
     (
         HttpConnector<AsyncHyperResolver>,
