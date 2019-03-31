@@ -26,3 +26,6 @@ tokio = "0.1.18"
 [features]
 hyper-tls-connector = ["hyper-tls", "native-tls"]
 
+[badges]
+maintenance = { status = "passively-maintained" }
+
