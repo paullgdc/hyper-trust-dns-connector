@@ -1,9 +1,8 @@
-#![doc(html_root_url = "https://docs.rs/hyper/0.12.25")]
 //! # hyper_trust_dns_connector
 //! 
-//! A compatibility crate to use [trust-dns-resolver](https://docs.rs/trust-dns-resolver) 
-//! asynchronously with [hyper](https://docs.rs/hyper) client,
-//! instead the default dns threadpool.
+//! A crate to make [trust-dns-resolver](https://docs.rs/trust-dns-resolver)'s
+//! asynchronous resolver compatible with [hyper](https://docs.rs/hyper) client,
+//! to use instead of the default dns threadpool.
 //! 
 //! ## Features
 //!
@@ -12,6 +11,13 @@
 //! [`native-tls`](https://docs.rs/native-tls/0.2/native_tls/) to
 //!     provide a helper function to create a tls connector.
 //!
+//! ## Usage
+//! 
+//! [trust-dns-resolver](https://docs.rs/trust-dns-resolver) creates a background that needs to
+//! be spawned on top of an executor to run dns queries. It does not need to be spawned on the 
+//! same executor as the client, but will deadlock if spawned on top of another executor that 
+//! runs on the same thread.
+//! 
 //! ## Example
 //!
 //! ```
@@ -49,7 +55,7 @@ use std::net::IpAddr;
 use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
 use trust_dns_resolver::{AsyncResolver, BackgroundLookupIp};
 
-/// Wrapper future type around trust-dns-resolver's 
+/// Wrapper future around trust-dns-resolver's 
 /// [`BackgroundLookupIp`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/type.BackgroundLookupIp.html)
 pub struct HyperLookupFuture(BackgroundLookupIp);
 
@@ -66,7 +72,7 @@ impl Future for HyperLookupFuture {
         })
     }
 }
-/// Wrapper type around trust-dns-resolver's 
+/// Wrapper around trust-dns-resolver's 
 /// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html)
 /// 
 /// The resolver runs a bakground Task wich manages dns requests. When a new resolver is created, 
@@ -101,7 +107,7 @@ impl Resolve for AsyncHyperResolver {
     }
 }
 
-/// A helper function to create an http connector from default configuration
+/// A helper function to create an http connector and a dns task with the default configuration
 /// 
 /// ```
 /// use tokio::runtime::Runtime;
@@ -141,11 +147,11 @@ pub fn new_async_http_connector() -> Result<
 ///
 /// let mut rt = Runtime::new().expect("couldn't create runtime");
 ///
-/// let (async_https, background) = new_async_https_connector()
+/// let (https, background) = new_async_https_connector()
 ///     .expect("couldn't create connector");
 /// let client = Client::builder()
 ///     .executor(rt.executor())
-///     .build::<_, Body>(async_https);
+///     .build::<_, Body>(https);
 ///
 /// rt.spawn(background);
 /// ```
@@ -192,7 +198,7 @@ pub mod https {
     }
 
     /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.3/hyper_tls/)
-    /// from default configuration.
+    /// and a dns task with the default configuration.
     pub fn new_async_https_connector() -> Result<
         (
             HttpsConnector<HttpConnector<AsyncHyperResolver>>,
