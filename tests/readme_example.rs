@@ -10,11 +10,11 @@ fn test_readme_example() {
 
     fn main() {
         let mut rt = Runtime::new().expect("couldn't create runtime");
-        let (async_http, background) = new_async_http_connector()
+        let (http, background) = new_async_http_connector()
             .expect("couldn't create connector");
         let client = Client::builder()
             .executor(rt.executor())
-            .build::<_, Body>(async_http);
+            .build::<_, Body>(http);
         rt.spawn(background);
         let status_code = rt.block_on(client.get(hyper::Uri::from_static("http://httpbin.org/ip")))
             .map(|res| res.status())
