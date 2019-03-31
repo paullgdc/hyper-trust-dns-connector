@@ -6,7 +6,6 @@ fn test_readme_example() {
 
     use hyper_trust_dns_connector::new_async_http_connector;
     use hyper::{Client, Body};
-    use tokio::prelude::Future;
     use tokio::runtime::Runtime;
 
     fn main() {
@@ -17,7 +16,8 @@ fn test_readme_example() {
             .executor(rt.executor())
             .build::<_, Body>(async_http);
         rt.spawn(background);
-        let status_code = rt.block_on(client.get(hyper::Uri::from_static("http://httpbin.org/ip")).map(|res| res.status()))
+        let status_code = rt.block_on(client.get(hyper::Uri::from_static("http://httpbin.org/ip")))
+            .map(|res| res.status())
             .expect("error during the request");
         println!("status is {:?}", status_code);
     }
