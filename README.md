@@ -16,8 +16,8 @@ By default hyper HttpConnector uses the std provided resolver wich is blocking i
 with a configurable number of threads. This crate provides an alternative using trust_dns_resolver,
 a dns resolver written in Rust, with async features.
 
- ## Usage
- 
+## Usage
+
 [trust-dns-resolver](https://docs.rs/trust-dns-resolver) creates a background that needs to
 be spawned on top of an executor to run dns queries. It does not need to be spawned on the
 same executor as the client, but will deadlock if spawned on top of another executor that
