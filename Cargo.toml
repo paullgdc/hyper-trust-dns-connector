@@ -14,14 +14,13 @@ categories = ["asynchronous", "web-programming::http-client", "network-programmi
 all-features = true
 
 [dependencies]
-futures = "0.1"
-trust-dns-resolver = "0.10"
-hyper = "0.12"
-hyper-tls = { version = "0.3", optional = true }
+trust-dns-resolver = "0.19"
+hyper = "0.13"
+hyper-tls = { version = "0.4", optional = true }
 native-tls = { version = "0.2", optional = true }
 
 [dev-dependencies]
-tokio = "0.1.18"
+tokio = {version = "0.2", features = ["macros", "rt-core"]}
 
 [features]
 hyper-tls-connector = ["hyper-tls", "native-tls"]

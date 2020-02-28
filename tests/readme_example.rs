@@ -6,21 +6,19 @@ fn test_readme_example() {
 
     use hyper_trust_dns_connector::new_async_http_connector;
     use hyper::{Client, Body};
-    use tokio::runtime::Runtime;
 
-    fn main() {
-        let mut rt = Runtime::new().expect("couldn't create runtime");
-        let (http, background) = new_async_http_connector()
+    #[tokio::main]
+    async fn main() {
+        let http = new_async_http_connector()
+            .await
             .expect("couldn't create connector");
         let client = Client::builder()
-            .executor(rt.executor())
             .build::<_, Body>(http);
-        rt.spawn(background);
-        let status_code = rt.block_on(client.get(hyper::Uri::from_static("http://httpbin.org/ip")))
-            .map(|res| res.status())
-            .expect("error during the request");
+        let status_code = client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
+            .await
+            .expect("error during the request")
+            .status();
         println!("status is {:?}", status_code);
     }
     main();
-
 }
