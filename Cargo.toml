@@ -23,6 +23,7 @@ native-tls = { version = "0.2", optional = true }
 tokio = {version = "0.2", features = ["macros", "rt-core"]}
 
 [features]
+default = []
 hyper-tls-connector = ["hyper-tls", "native-tls"]
 
 [badges]
