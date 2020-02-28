@@ -1,8 +1,5 @@
 #[test]
 fn test_readme_example() {
-    extern crate hyper_trust_dns_connector;
-    extern crate hyper;
-    extern crate tokio;
 
     use hyper_trust_dns_connector::new_async_http_connector;
     use hyper::{Client, Body};

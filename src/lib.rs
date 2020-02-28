@@ -7,7 +7,7 @@
 //! ## Features
 //!
 //!  * `hyper-tls-connector` This feature includes
-//! [`hyper-tls`](https://docs.rs/hyper-tls/0.3/hyper_tls/) and
+//! [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/) and
 //! [`native-tls`](https://docs.rs/native-tls/0.2/native_tls/) to
 //!     provide a helper function to create a tls connector.
 //!
@@ -19,10 +19,6 @@
 //! ## Example
 //!
 //! ```
-//! extern crate hyper_trust_dns_connector;
-//! extern crate hyper;
-//! extern crate tokio;
-//!
 //! use hyper_trust_dns_connector::new_async_http_connector;
 //! use hyper::{Client, Body};
 //!
@@ -40,8 +36,6 @@
 //!     println!("status is {:?}", status_code);
 //! }
 //! ```
-extern crate hyper;
-extern crate trust_dns_resolver;
 
 use hyper::client::connect::dns::Name;
 use hyper::client::HttpConnector;
@@ -121,37 +115,36 @@ pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolv
     Ok(HttpConnector::new_with_resolver(resolver))
 }
 
-/// Module to use [`hyper-tls`](https://docs.rs/hyper-tls/0.3/hyper_tls/),
+/// Module to use [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/),
 /// needs "hyper-tls-connector" feature enabled
 ///
 /// ## Example
 ///
 /// ```
-/// use tokio::runtime::Runtime;
+/// use hyper::Client;
 /// use hyper_trust_dns_connector::https::new_async_https_connector;
-/// use hyper::{Client, Body};
 ///
-/// let mut rt = Runtime::new().expect("couldn't create runtime");
-///
-/// let (https, background) = new_async_https_connector()
-///     .expect("couldn't create connector");
-/// let client = Client::builder()
-///     .executor(rt.executor())
-///     .build::<_, Body>(https);
-///
-/// rt.spawn(background);
+/// #[tokio::main]
+/// async fn main() {
+///     let async_https = new_async_https_connector()
+///         .await
+///         .expect("couldn't create connector");
+///     let client: Client<_> = Client::builder().build(async_https);
+///     let status_code = client
+///         .get(hyper::Uri::from_static("https://httpbin.org/ip"))
+///         .await
+///         .expect("error during the request")
+///         .status();
+///     println!("status is {:?}", status_code);
+/// }
 /// ```
 #[cfg(feature = "hyper-tls-connector")]
 pub mod https {
-
-    extern crate hyper_tls;
-    extern crate native_tls;
 
     use hyper_tls::HttpsConnector;
     use native_tls::TlsConnector;
 
     use crate::io;
-    use crate::Future;
     use crate::HttpConnector;
     use crate::{new_async_http_connector, AsyncHyperResolver};
 
@@ -183,18 +176,13 @@ pub mod https {
         }
     }
 
-    /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.3/hyper_tls/)
+    /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/)
     /// and a dns task with the default configuration.
-    pub fn new_async_https_connector() -> Result<
-        (
-            HttpsConnector<HttpConnector<AsyncHyperResolver>>,
-            impl Future<Item = (), Error = ()>,
-        ),
-        Error,
-    > {
-        let (mut http, background) = new_async_http_connector()?;
+    pub async fn new_async_https_connector(
+    ) -> Result<HttpsConnector<HttpConnector<AsyncHyperResolver>>, Error> {
+        let mut http = new_async_http_connector().await?;
         http.enforce_http(false);
         let tls_connector = TlsConnector::new()?;
-        Ok((HttpsConnector::from((http, tls_connector)), background))
+        Ok(HttpsConnector::from((http, tls_connector.into())))
     }
 }

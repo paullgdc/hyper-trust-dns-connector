@@ -1,7 +1,3 @@
-extern crate hyper;
-extern crate hyper_trust_dns_connector;
-extern crate tokio;
-
 use hyper::client::HttpConnector;
 use hyper_trust_dns_connector::{new_async_http_connector, AsyncHyperResolver};
 use std::str::FromStr;
