@@ -1,171 +1,141 @@
 //! # hyper_trust_dns_connector
-//! 
+//!
 //! A crate to make [trust-dns-resolver](https://docs.rs/trust-dns-resolver)'s
 //! asynchronous resolver compatible with [hyper](https://docs.rs/hyper) client,
 //! to use instead of the default dns threadpool.
-//! 
+//!
 //! ## Features
 //!
 //!  * `hyper-tls-connector` This feature includes
-//! [`hyper-tls`](https://docs.rs/hyper-tls/0.3/hyper_tls/) and
+//! [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/) and
 //! [`native-tls`](https://docs.rs/native-tls/0.2/native_tls/) to
 //!     provide a helper function to create a tls connector.
 //!
 //! ## Usage
-//! 
-//! [trust-dns-resolver](https://docs.rs/trust-dns-resolver) creates a background that needs to
-//! be spawned on top of an executor to run dns queries. It does not need to be spawned on the 
-//! same executor as the client, but will deadlock if spawned on top of another executor that 
-//! runs on the same thread.
-//! 
+//!
+//! [trust-dns-resolver](https://docs.rs/trust-dns-resolver) creates an async resolver
+//! for dns queries, which is then used by hyper
+//!
 //! ## Example
 //!
 //! ```
-//! extern crate hyper_trust_dns_connector;
-//! extern crate hyper;
-//! extern crate tokio;
-//! 
 //! use hyper_trust_dns_connector::new_async_http_connector;
 //! use hyper::{Client, Body};
-//! use tokio::prelude::Future;
-//! use tokio::runtime::Runtime;
-//! 
-//! let mut rt = Runtime::new().expect("couldn't create runtime");
-//! let (async_http, background) = new_async_http_connector()
-//!     .expect("couldn't create connector");
-//! let client = Client::builder()
-//!     .executor(rt.executor())
-//!     .build::<_, Body>(async_http);
-//! rt.spawn(background);
-//! let status_code = rt
-//!     .block_on(client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
-//!     .map(|res| res.status()))
-//!     .expect("error during the request");
-//! println!("status is {:?}", status_code);
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let http = new_async_http_connector().await?;
+//!     let client = Client::builder().build::<_, Body>(http);
+//!     let res = client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
+//!         .await?;
+//!     assert_eq!(res.status(), 200);
+//!     Ok(())
+//! }
 //! ```
-extern crate futures;
-extern crate hyper;
-extern crate trust_dns_resolver;
 
-use futures::{Async, Future, Poll};
-use hyper::client::connect::dns::{Name, Resolve};
+use hyper::client::connect::dns::Name;
 use hyper::client::HttpConnector;
+use hyper::service::Service;
+use std::future::Future;
 use std::io;
 use std::net::IpAddr;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
-use trust_dns_resolver::{AsyncResolver, BackgroundLookupIp};
+use trust_dns_resolver::TokioAsyncResolver;
 
-/// Wrapper future around trust-dns-resolver's 
-/// [`BackgroundLookupIp`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/type.BackgroundLookupIp.html)
-pub struct HyperLookupFuture(BackgroundLookupIp);
-
-impl Future for HyperLookupFuture {
-    type Item = std::vec::IntoIter<IpAddr>;
-    type Error = io::Error;
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        let lookups = self.0.poll()?;
-        Ok(match lookups {
-            Async::NotReady => Async::NotReady,
-            Async::Ready(lookups) => {
-                Async::Ready(lookups.iter().collect::<Vec<IpAddr>>().into_iter())
-            }
-        })
-    }
-}
-/// Wrapper around trust-dns-resolver's 
+/// Wrapper around trust-dns-resolver's
 /// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html)
-/// 
-/// The resolver runs a bakground Task wich manages dns requests. When a new resolver is created, 
+///
+/// The resolver runs a bakground Task wich manages dns requests. When a new resolver is created,
 /// the background task is also created, it needs to be spawned on top of an executor before using the client,
 /// or dns requests will block.
 #[derive(Debug, Clone)]
-pub struct AsyncHyperResolver(AsyncResolver);
+pub struct AsyncHyperResolver(TokioAsyncResolver);
 
 impl AsyncHyperResolver {
     /// constructs a new resolver, arguments are passed to the corresponding method of
-    /// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html#method.new)
-    pub fn new(
-        config: ResolverConfig,
-        options: ResolverOpts,
-    ) -> (Self, impl Future<Item = (), Error = ()>) {
-        let (resolver, background) = AsyncResolver::new(config, options);
-        (Self(resolver), background)
+    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.19.3/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
+    pub async fn new(config: ResolverConfig, options: ResolverOpts) -> Result<Self, io::Error> {
+        let resolver = TokioAsyncResolver::tokio(config, options).await?;
+        Ok(Self(resolver))
     }
+
     /// constructs a new resolver from default configuration, uses the corresponding method of
-    /// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html#method.new) 
-    pub fn new_from_system_conf() -> Result<(Self, impl Future<Item = (), Error = ()>), io::Error> {
-        let (resolver, background) = AsyncResolver::from_system_conf()?;
-        Ok((Self(resolver), background))
+    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.19.3/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
+    pub async fn new_from_system_conf() -> Result<Self, io::Error> {
+        let resolver = TokioAsyncResolver::tokio_from_system_conf().await?;
+        Ok(Self(resolver))
     }
 }
 
-impl Resolve for AsyncHyperResolver {
-    type Addrs = std::vec::IntoIter<IpAddr>;
-    type Future = HyperLookupFuture;
-    fn resolve(&self, name: Name) -> Self::Future {
-        HyperLookupFuture(self.0.lookup_ip(name.as_str()))
+impl Service<Name> for AsyncHyperResolver {
+    type Response = std::vec::IntoIter<IpAddr>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+    type Error = io::Error;
+
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, name: Name) -> Self::Future {
+        let resolver = self.0.clone();
+        Box::pin((|| async move {
+            Ok(resolver
+                .lookup_ip(name.as_str())
+                .await?
+                .iter()
+                .collect::<Vec<IpAddr>>()
+                .into_iter())
+        })())
     }
 }
 
 /// A helper function to create an http connector and a dns task with the default configuration
-/// 
+///
 /// ```
-/// use tokio::runtime::Runtime;
 /// use hyper_trust_dns_connector::new_async_http_connector;
 /// use hyper::{Client, Body};
-/// 
-/// let mut rt = Runtime::new().expect("couldn't create runtime");
-/// 
-/// let (async_http, background) = new_async_http_connector()
-///     .expect("couldn't create connector");
-/// let client = Client::builder()
-///     .executor(rt.executor())
-///     .build::<_, Body>(async_http);
-/// 
-/// rt.spawn(background);
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let async_http = new_async_http_connector().await?;
+/// let client = Client::builder().build::<_, Body>(async_http);
+/// # Ok(())
+/// # }
 /// ```
-pub fn new_async_http_connector() -> Result<
-    (
-        HttpConnector<AsyncHyperResolver>,
-        impl Future<Item = (), Error = ()>,
-    ),
-    io::Error,
-> {
-    let (resolver, background) = AsyncHyperResolver::new_from_system_conf()?;
-    Ok((HttpConnector::new_with_resolver(resolver), background))
+pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolver>, io::Error> {
+    let resolver = AsyncHyperResolver::new_from_system_conf().await?;
+    Ok(HttpConnector::new_with_resolver(resolver))
 }
 
-/// Module to use [`hyper-tls`](https://docs.rs/hyper-tls/0.3/hyper_tls/),
+/// Module to use [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/),
 /// needs "hyper-tls-connector" feature enabled
-/// 
-/// ## Example 
-/// 
+///
+/// ## Example
+///
 /// ```
-/// use tokio::runtime::Runtime;
+/// use hyper::Client;
 /// use hyper_trust_dns_connector::https::new_async_https_connector;
-/// use hyper::{Client, Body};
 ///
-/// let mut rt = Runtime::new().expect("couldn't create runtime");
-///
-/// let (https, background) = new_async_https_connector()
-///     .expect("couldn't create connector");
-/// let client = Client::builder()
-///     .executor(rt.executor())
-///     .build::<_, Body>(https);
-///
-/// rt.spawn(background);
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let async_https = new_async_https_connector().await?;
+///     let client: Client<_> = Client::builder().build(async_https);
+///     let res = client
+///         .get(hyper::Uri::from_static("https://httpbin.org/ip"))
+///         .await?;
+///     assert_eq!(res.status(), 200);
+///     Ok(())
+/// }
 /// ```
 #[cfg(feature = "hyper-tls-connector")]
 pub mod https {
-
-    extern crate hyper_tls;
-    extern crate native_tls;
 
     use hyper_tls::HttpsConnector;
     use native_tls::TlsConnector;
 
     use crate::io;
-    use crate::Future;
     use crate::HttpConnector;
     use crate::{new_async_http_connector, AsyncHyperResolver};
 
@@ -197,19 +167,13 @@ pub mod https {
         }
     }
 
-    /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.3/hyper_tls/)
+    /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/)
     /// and a dns task with the default configuration.
-    pub fn new_async_https_connector() -> Result<
-        (
-            HttpsConnector<HttpConnector<AsyncHyperResolver>>,
-            impl Future<Item = (), Error = ()>,
-        ),
-        Error,
-    > {
-        let (mut http, background) = new_async_http_connector()?;
+    pub async fn new_async_https_connector(
+    ) -> Result<HttpsConnector<HttpConnector<AsyncHyperResolver>>, Error> {
+        let mut http = new_async_http_connector().await?;
         http.enforce_http(false);
         let tls_connector = TlsConnector::new()?;
-        Ok((HttpsConnector::from((http, tls_connector)), background))
+        Ok(HttpsConnector::from((http, tls_connector.into())))
     }
-
 }

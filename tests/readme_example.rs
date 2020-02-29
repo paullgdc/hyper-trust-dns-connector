@@ -1,26 +1,18 @@
 #[test]
-fn test_readme_example() {
-    extern crate hyper_trust_dns_connector;
-    extern crate hyper;
-    extern crate tokio;
-
+fn test_readme_example() -> Result<(), Box<dyn std::error::Error>> {
+    use hyper::{Body, Client};
     use hyper_trust_dns_connector::new_async_http_connector;
-    use hyper::{Client, Body};
-    use tokio::runtime::Runtime;
 
-    fn main() {
-        let mut rt = Runtime::new().expect("couldn't create runtime");
-        let (http, background) = new_async_http_connector()
-            .expect("couldn't create connector");
-        let client = Client::builder()
-            .executor(rt.executor())
-            .build::<_, Body>(http);
-        rt.spawn(background);
-        let status_code = rt.block_on(client.get(hyper::Uri::from_static("http://httpbin.org/ip")))
-            .map(|res| res.status())
-            .expect("error during the request");
-        println!("status is {:?}", status_code);
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let http = new_async_http_connector().await?;
+        let client = Client::builder().build::<_, Body>(http);
+        let status_code = client
+            .get(hyper::Uri::from_static("http://httpbin.org/ip"))
+            .await?
+            .status();
+        assert_eq!(status_code, 200);
+        Ok(())
     }
-    main();
-
+    main()
 }
