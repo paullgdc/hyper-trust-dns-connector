@@ -23,17 +23,13 @@
 //! use hyper::{Client, Body};
 //!
 //! #[tokio::main]
-//! async fn main() {
-//!     let http = new_async_http_connector()
-//!         .await
-//!         .expect("couldn't create connector");
-//!     let client = Client::builder()
-//!         .build::<_, Body>(http);
-//!     let status_code = client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
-//!         .await
-//!         .expect("error during the request")
-//!         .status();
-//!     println!("status is {:?}", status_code);
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let http = new_async_http_connector().await?;
+//!     let client = Client::builder().build::<_, Body>(http);
+//!     let res = client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
+//!         .await?;
+//!     assert_eq!(res.status(), 200);
+//!     Ok(())
 //! }
 //! ```
 
@@ -102,12 +98,10 @@ impl Service<Name> for AsyncHyperResolver {
 /// use hyper::{Client, Body};
 ///
 /// # #[tokio::main]
-/// # async fn main() {
-/// let async_http = new_async_http_connector()
-///     .await
-///     .expect("couldn't create connector");
-/// let client = Client::builder()
-///     .build::<_, Body>(async_http);
+/// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let async_http = new_async_http_connector().await?;
+/// let client = Client::builder().build::<_, Body>(async_http);
+/// # Ok(())
 /// # }
 /// ```
 pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolver>, io::Error> {
@@ -125,17 +119,14 @@ pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolv
 /// use hyper_trust_dns_connector::https::new_async_https_connector;
 ///
 /// #[tokio::main]
-/// async fn main() {
-///     let async_https = new_async_https_connector()
-///         .await
-///         .expect("couldn't create connector");
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let async_https = new_async_https_connector().await?;
 ///     let client: Client<_> = Client::builder().build(async_https);
-///     let status_code = client
+///     let res = client
 ///         .get(hyper::Uri::from_static("https://httpbin.org/ip"))
-///         .await
-///         .expect("error during the request")
-///         .status();
-///     println!("status is {:?}", status_code);
+///         .await?;
+///     assert_eq!(res.status(), 200);
+///     Ok(())
 /// }
 /// ```
 #[cfg(feature = "hyper-tls-connector")]

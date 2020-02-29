@@ -1,21 +1,18 @@
 #[test]
-fn test_readme_example() {
-
+fn test_readme_example() -> Result<(), Box<dyn std::error::Error>> {
+    use hyper::{Body, Client};
     use hyper_trust_dns_connector::new_async_http_connector;
-    use hyper::{Client, Body};
 
     #[tokio::main]
-    async fn main() {
-        let http = new_async_http_connector()
-            .await
-            .expect("couldn't create connector");
-        let client = Client::builder()
-            .build::<_, Body>(http);
-        let status_code = client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
-            .await
-            .expect("error during the request")
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let http = new_async_http_connector().await?;
+        let client = Client::builder().build::<_, Body>(http);
+        let status_code = client
+            .get(hyper::Uri::from_static("http://httpbin.org/ip"))
+            .await?
             .status();
-        println!("status is {:?}", status_code);
+        assert_eq!(status_code, 200);
+        Ok(())
     }
-    main();
+    main()
 }
