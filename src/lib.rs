@@ -36,11 +36,10 @@
 use hyper::client::connect::dns::Name;
 use hyper::client::HttpConnector;
 use hyper::service::Service;
-use std::future::Future;
 use std::io;
-use std::net::IpAddr;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+use std::{future::Future, net::SocketAddr, net::ToSocketAddrs};
 use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
 use trust_dns_resolver::TokioAsyncResolver;
 
@@ -57,20 +56,20 @@ impl AsyncHyperResolver {
     /// constructs a new resolver, arguments are passed to the corresponding method of
     /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.19.3/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
     pub async fn new(config: ResolverConfig, options: ResolverOpts) -> Result<Self, io::Error> {
-        let resolver = TokioAsyncResolver::tokio(config, options).await?;
+        let resolver = TokioAsyncResolver::tokio(config, options)?;
         Ok(Self(resolver))
     }
 
     /// constructs a new resolver from default configuration, uses the corresponding method of
     /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.19.3/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
     pub async fn new_from_system_conf() -> Result<Self, io::Error> {
-        let resolver = TokioAsyncResolver::tokio_from_system_conf().await?;
+        let resolver = TokioAsyncResolver::tokio_from_system_conf()?;
         Ok(Self(resolver))
     }
 }
 
 impl Service<Name> for AsyncHyperResolver {
-    type Response = std::vec::IntoIter<IpAddr>;
+    type Response = std::vec::IntoIter<SocketAddr>;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
     type Error = io::Error;
 
@@ -85,7 +84,11 @@ impl Service<Name> for AsyncHyperResolver {
                 .lookup_ip(name.as_str())
                 .await?
                 .iter()
-                .collect::<Vec<IpAddr>>()
+                .map(|addr| (addr, 0_u16).to_socket_addrs())
+                .try_fold(Vec::new(), |mut acc, s_addr| {
+                    acc.extend(s_addr?);
+                    Ok::<_, io::Error>(acc)
+                })?
                 .into_iter())
         })())
     }

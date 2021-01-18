@@ -1,6 +1,6 @@
 #[test]
 fn test_readme_example() -> Result<(), Box<dyn std::error::Error>> {
-    use hyper::{Body, Client};
+    use hyper::{Body, client::Client};
     use hyper_trust_dns_connector::new_async_http_connector;
 
     #[tokio::main]
