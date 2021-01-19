@@ -25,7 +25,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let http = new_async_http_connector().await?;
+//!     let http = new_async_http_connector()?;
 //!     let client = Client::builder().build::<_, Body>(http);
 //!     let res = client.get(hyper::Uri::from_static("http://httpbin.org/ip"))
 //!         .await?;
@@ -56,14 +56,14 @@ pub struct AsyncHyperResolver(TokioAsyncResolver);
 impl AsyncHyperResolver {
     /// constructs a new resolver, arguments are passed to the corresponding method of
     /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
-    pub async fn new(config: ResolverConfig, options: ResolverOpts) -> Result<Self, io::Error> {
+    pub fn new(config: ResolverConfig, options: ResolverOpts) -> Result<Self, io::Error> {
         let resolver = TokioAsyncResolver::tokio(config, options)?;
         Ok(Self(resolver))
     }
 
     /// constructs a new resolver from default configuration, uses the corresponding method of
     /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
-    pub async fn new_from_system_conf() -> Result<Self, io::Error> {
+    pub fn new_from_system_conf() -> Result<Self, io::Error> {
         let resolver = TokioAsyncResolver::tokio_from_system_conf()?;
         Ok(Self(resolver))
     }
@@ -103,13 +103,13 @@ impl Service<Name> for AsyncHyperResolver {
 ///
 /// # #[tokio::main]
 /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-/// let async_http = new_async_http_connector().await?;
+/// let async_http = new_async_http_connector()?;
 /// let client = Client::builder().build::<_, Body>(async_http);
 /// # Ok(())
 /// # }
 /// ```
-pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolver>, io::Error> {
-    let resolver = AsyncHyperResolver::new_from_system_conf().await?;
+pub fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolver>, io::Error> {
+    let resolver = AsyncHyperResolver::new_from_system_conf()?;
     Ok(HttpConnector::new_with_resolver(resolver))
 }
 
@@ -174,9 +174,9 @@ pub mod https {
 
     /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.5/hyper_tls/)
     /// and a dns task with the default configuration.
-    pub async fn new_async_https_connector(
+    pub fn new_async_https_connector(
     ) -> Result<HttpsConnector<HttpConnector<AsyncHyperResolver>>, Error> {
-        let mut http = new_async_http_connector().await?;
+        let mut http = new_async_http_connector()?;
         http.enforce_http(false);
         let tls_connector = TlsConnector::new()?;
         Ok(HttpsConnector::from((http, tls_connector.into())))

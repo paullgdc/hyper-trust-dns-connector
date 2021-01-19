@@ -1,13 +1,11 @@
 #[cfg(feature = "hyper-tls-connector")]
 mod tests {
-    use hyper::{Client, body::to_bytes};
+    use hyper::{body::to_bytes, Client};
     use hyper_trust_dns_connector::https::new_async_https_connector;
 
     #[tokio::test]
     async fn test_https_connector() {
-        let async_https = new_async_https_connector()
-            .await
-            .expect("couldn't create connector");
+        let async_https = new_async_https_connector().expect("couldn't create connector");
         let client: Client<_> = Client::builder().build(async_https);
         let mut res = client
             .get(hyper::Uri::from_static("https://httpbin.org/ip"))

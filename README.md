@@ -24,7 +24,7 @@ use hyper_trust_dns_connector::new_async_http_connector;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let http = new_async_http_connector().await?;
+    let http = new_async_http_connector()?;
     let client = Client::builder().build::<_, Body>(http);
     let status_code = client
         .get(hyper::Uri::from_static("http://httpbin.org/ip"))
