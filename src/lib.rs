@@ -124,7 +124,7 @@ pub fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolver>, i
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let https_connector = new_async_https_connector().await?;
+///     let https_connector = new_async_https_connector()?;
 ///     let client: Client<_> = Client::builder().build(https_connector);
 ///     let res = client
 ///         .get(hyper::Uri::from_static("https://httpbin.org/ip"))
@@ -133,7 +133,6 @@ pub fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolver>, i
 ///     Ok(())
 /// }
 /// ```
-
 #[cfg(feature = "hyper-tls-connector")]
 #[cfg_attr(docsrs, doc(cfg(feature = "hyper-tls-connector")))]
 pub mod https {
