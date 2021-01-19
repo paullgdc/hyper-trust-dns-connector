@@ -1,3 +1,4 @@
+#![feature(doc_cfg)]
 //! # hyper_trust_dns_connector
 //!
 //! A crate to make [trust-dns-resolver](https://docs.rs/trust-dns-resolver)'s
@@ -7,7 +8,7 @@
 //! ## Features
 //!
 //!  * `hyper-tls-connector` This feature includes
-//! [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/) and
+//! [`hyper-tls`](https://docs.rs/hyper-tls/0.5/hyper_tls/) and
 //! [`native-tls`](https://docs.rs/native-tls/0.2/native_tls/) to
 //!     provide a helper function to create a tls connector.
 //!
@@ -44,7 +45,7 @@ use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
 use trust_dns_resolver::TokioAsyncResolver;
 
 /// Wrapper around trust-dns-resolver's
-/// [`AsyncResolver`](https://docs.rs/trust-dns-resolver/0.10.3/trust_dns_resolver/struct.AsyncResolver.html)
+/// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html)
 ///
 /// The resolver runs a bakground Task wich manages dns requests. When a new resolver is created,
 /// the background task is also created, it needs to be spawned on top of an executor before using the client,
@@ -54,14 +55,14 @@ pub struct AsyncHyperResolver(TokioAsyncResolver);
 
 impl AsyncHyperResolver {
     /// constructs a new resolver, arguments are passed to the corresponding method of
-    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.19.3/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
+    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
     pub async fn new(config: ResolverConfig, options: ResolverOpts) -> Result<Self, io::Error> {
         let resolver = TokioAsyncResolver::tokio(config, options)?;
         Ok(Self(resolver))
     }
 
     /// constructs a new resolver from default configuration, uses the corresponding method of
-    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.19.3/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
+    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
     pub async fn new_from_system_conf() -> Result<Self, io::Error> {
         let resolver = TokioAsyncResolver::tokio_from_system_conf()?;
         Ok(Self(resolver))
@@ -112,8 +113,8 @@ pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolv
     Ok(HttpConnector::new_with_resolver(resolver))
 }
 
-/// Module to use [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/),
-/// needs "hyper-tls-connector" feature enabled
+/// Provides a helper method to create an https connector using
+/// [`hyper-tls`](https://docs.rs/hyper-tls/0.5/hyper_tls/)
 ///
 /// ## Example
 ///
@@ -123,8 +124,8 @@ pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolv
 ///
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-///     let async_https = new_async_https_connector().await?;
-///     let client: Client<_> = Client::builder().build(async_https);
+///     let https_connector = new_async_https_connector().await?;
+///     let client: Client<_> = Client::builder().build(https_connector);
 ///     let res = client
 ///         .get(hyper::Uri::from_static("https://httpbin.org/ip"))
 ///         .await?;
@@ -133,6 +134,7 @@ pub async fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolv
 /// }
 /// ```
 #[cfg(feature = "hyper-tls-connector")]
+#[doc(cfg(feature = "hyper-tls-connector"))]
 pub mod https {
 
     use hyper_tls::HttpsConnector;
@@ -170,7 +172,7 @@ pub mod https {
         }
     }
 
-    /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.4/hyper_tls/)
+    /// A helper function to create an https connector from [`hyper-tls`](https://docs.rs/hyper-tls/0.5/hyper_tls/)
     /// and a dns task with the default configuration.
     pub async fn new_async_https_connector(
     ) -> Result<HttpsConnector<HttpConnector<AsyncHyperResolver>>, Error> {
