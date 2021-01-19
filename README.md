@@ -19,7 +19,7 @@ a dns resolver written in Rust, with async features.
 ## Example
 
 ```rust
-use hyper::{Body, client::Client};
+use hyper::{Body, Client};
 use hyper_trust_dns_connector::new_async_http_connector;
 
 #[tokio::main]
