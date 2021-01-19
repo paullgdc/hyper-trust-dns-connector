@@ -12,6 +12,7 @@ categories = ["asynchronous", "web-programming::http-client", "network-programmi
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 trust-dns-resolver = "0.20"

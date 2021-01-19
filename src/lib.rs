@@ -1,4 +1,4 @@
-#![feature(doc_cfg)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //! # hyper_trust_dns_connector
 //!
 //! A crate to make [trust-dns-resolver](https://docs.rs/trust-dns-resolver)'s
@@ -133,8 +133,9 @@ pub fn new_async_http_connector() -> Result<HttpConnector<AsyncHyperResolver>, i
 ///     Ok(())
 /// }
 /// ```
+
 #[cfg(feature = "hyper-tls-connector")]
-#[doc(cfg(feature = "hyper-tls-connector"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "hyper-tls-connector")))]
 pub mod https {
 
     use hyper_tls::HttpsConnector;
