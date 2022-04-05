@@ -15,7 +15,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-trust-dns-resolver = "0.20"
+trust-dns-resolver = "0.21"
 hyper = { version = "0.14", features = ["tcp", "client"] }
 hyper-tls = { version = "0.5", optional = true }
 native-tls = { version = "0.2", optional = true }
