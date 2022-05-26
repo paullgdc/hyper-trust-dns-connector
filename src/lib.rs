@@ -47,7 +47,7 @@ use trust_dns_resolver::TokioAsyncResolver;
 /// Wrapper around trust-dns-resolver's
 /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html)
 ///
-/// The resolver runs a bakground Task wich manages dns requests. When a new resolver is created,
+/// The resolver runs a background Task which manages dns requests. When a new resolver is created,
 /// the background task is also created, it needs to be spawned on top of an executor before using the client,
 /// or dns requests will block.
 #[derive(Debug, Clone)]
