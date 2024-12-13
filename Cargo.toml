@@ -1,6 +1,6 @@
 [package]
 name = "hyper-trust-dns-connector"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Paul Le Grand Des Cloizeaux <@paullgdc>"]
 edition = "2018"
 description = "A compatibility crate to use trust-dns-resolver asynchronously with hyper client, instead the default dns threadpool"
@@ -15,15 +15,15 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-trust-dns-resolver = "0.21"
+hickory-resolver = "0.24"
 hyper = { version = "0.14", features = ["tcp", "client"] }
 hyper-tls = { version = "0.5", optional = true }
 native-tls = { version = "0.2", optional = true }
 linked-hash-map = "0.5.3"
 
 [dev-dependencies]
-tokio = {version = "1.0.2", features = ["macros", "rt"]}
-hyper = { features = ["http1"] }
+tokio = { version = "1.0.2", features = ["macros", "rt"] }
+hyper = { version = "0.14", features = ["http1"] }
 
 [features]
 default = []
