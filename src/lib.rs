@@ -34,6 +34,8 @@
 //! }
 //! ```
 
+use hickory_resolver::config::{ResolverConfig, ResolverOpts};
+use hickory_resolver::TokioAsyncResolver;
 use hyper::client::connect::dns::Name;
 use hyper::client::HttpConnector;
 use hyper::service::Service;
@@ -41,8 +43,6 @@ use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{future::Future, net::SocketAddr, net::ToSocketAddrs};
-use trust_dns_resolver::config::{ResolverConfig, ResolverOpts};
-use trust_dns_resolver::TokioAsyncResolver;
 
 /// Wrapper around trust-dns-resolver's
 /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html)
@@ -57,7 +57,7 @@ impl AsyncHyperResolver {
     /// constructs a new resolver, arguments are passed to the corresponding method of
     /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
     pub fn new(config: ResolverConfig, options: ResolverOpts) -> Result<Self, io::Error> {
-        let resolver = TokioAsyncResolver::tokio(config, options)?;
+        let resolver = TokioAsyncResolver::tokio(config, options);
         Ok(Self(resolver))
     }
 
