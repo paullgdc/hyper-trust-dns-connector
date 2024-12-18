@@ -1,7 +1,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 //! # hyper_trust_dns_connector
 //!
-//! A crate to make [trust-dns-resolver](https://docs.rs/trust-dns-resolver)'s
+//! A crate to make [hickory-resolver](https://docs.rs/hickory-resolver/)'s (previously trust_dns_resolver)
 //! asynchronous resolver compatible with [hyper](https://docs.rs/hyper) client,
 //! to use instead of the default dns threadpool.
 //!
@@ -14,7 +14,7 @@
 //!
 //! ## Usage
 //!
-//! [trust-dns-resolver](https://docs.rs/trust-dns-resolver) creates an async resolver
+//! [hickory-resolver](https://docs.rs/hickory-resolver/) creates an async resolver
 //! for dns queries, which is then used by hyper
 //!
 //! ## Example
@@ -44,8 +44,8 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{future::Future, net::SocketAddr, net::ToSocketAddrs};
 
-/// Wrapper around trust-dns-resolver's
-/// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html)
+/// Wrapper around hickory-resolver's
+/// [`TokioAsyncResolver`](https://docs.rs/hickory-resolver/0.24.2/hickory_resolver/type.TokioAsyncResolver.html)
 ///
 /// The resolver runs a background Task which manages dns requests. When a new resolver is created,
 /// the background task is also created, it needs to be spawned on top of an executor before using the client,
@@ -55,14 +55,14 @@ pub struct AsyncHyperResolver(TokioAsyncResolver);
 
 impl AsyncHyperResolver {
     /// constructs a new resolver, arguments are passed to the corresponding method of
-    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
+    /// [`TokioAsyncResolver`](https://docs.rs/hickory-resolver/0.24.2/hickory_resolver/struct.AsyncResolver.html#method.new)
     pub fn new(config: ResolverConfig, options: ResolverOpts) -> Result<Self, io::Error> {
         let resolver = TokioAsyncResolver::tokio(config, options);
         Ok(Self(resolver))
     }
 
     /// constructs a new resolver from default configuration, uses the corresponding method of
-    /// [`TokioAsyncResolver`](https://docs.rs/trust-dns-resolver/0.20.0/trust_dns_resolver/type.TokioAsyncResolver.html#method.new)
+    /// [`TokioAsyncResolver`](https://docs.rs/hickory-resolver/0.24.2/hickory_resolver/struct.AsyncResolver.html#method.tokio_from_system_conf)
     pub fn new_from_system_conf() -> Result<Self, io::Error> {
         let resolver = TokioAsyncResolver::tokio_from_system_conf()?;
         Ok(Self(resolver))

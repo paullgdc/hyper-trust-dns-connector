@@ -4,7 +4,7 @@
 [![crates.io](https://meritbadge.herokuapp.com/hyper-trust-dns-connector)](https://crates.io/crates/hyper-trust-dns-connector)
 [![Released API docs](https://docs.rs/hyper-trust-dns-connector/badge.svg)](https://docs.rs/hyper-trust-dns-connector)
 
-A crate to make [trust-dns-resolver](https://docs.rs/trust-dns-resolver)'s
+A crate to make [hickory-resolver](https://docs.rs/hickory-resolver/)'s (previously trust_dns_resolver)
 asynchronous resolver compatible with [hyper](https://docs.rs/hyper) client,
 to use instead of the default dns threadpool.
 
@@ -13,7 +13,7 @@ to use instead of the default dns threadpool.
 ## Motivations
 
 By default hyper HttpConnector uses the std provided resolver wich is blocking in a threadpool
-with a configurable number of threads. This crate provides an alternative using trust_dns_resolver,
+with a configurable number of threads. This crate provides an alternative using hickory-resolver,
 a dns resolver written in Rust, with async features.
 
 ## Example
