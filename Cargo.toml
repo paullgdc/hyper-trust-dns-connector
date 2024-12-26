@@ -7,7 +7,7 @@ description = "A compatibility crate to use hickory-dns asynchronously with hype
 repository = "https://github.com/paullgdc/hyper-trust-dns-connector"
 readme = "README.md"
 license = "MIT"
-keywords = ["resolver", "hyper", "trust-dns", "hickory-dns", "webclient", "async"]
+keywords = ["resolver", "hyper", "trust-dns", "hickory-dns", "async"]
 categories = ["asynchronous", "web-programming::http-client", "network-programming"]
 
 [package.metadata.docs.rs]
