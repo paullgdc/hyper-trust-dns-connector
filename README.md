@@ -1,7 +1,7 @@
 # hyper-trust-dns-connector
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![crates.io](https://meritbadge.herokuapp.com/hyper-trust-dns-connector)](https://crates.io/crates/hyper-trust-dns-connector)
+[![crates.io](https://img.shields.io/crates/v/hyper-trust-dns-connector.svg)](https://crates.io/crates/hyper-trust-dns-connector)
 [![Released API docs](https://docs.rs/hyper-trust-dns-connector/badge.svg)](https://docs.rs/hyper-trust-dns-connector)
 
 A crate to make [hickory-resolver](https://docs.rs/hickory-resolver/)'s (previously trust_dns_resolver)
